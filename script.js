@@ -1,11 +1,15 @@
-const SUPABASE_URL = "https://fvoqwqarrlewwonzsydh.supabase.co";
-const SUPABASE_KEY = "sb_publishable_78UTQOor9uK3v_sDHF0YgA_Xgli01AM";
+const SUPABASE_URL = "DEINE_SUPABASE_URL";
+const SUPABASE_KEY = "DEIN_PUBLISHABLE_KEY";
 
 let supabaseClient = null;
 
 if (typeof supabase !== "undefined") {
   supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 }
+
+/* =========================
+   NAVBAR
+========================= */
 
 async function updateNavbar() {
   if (!supabaseClient) return;
@@ -31,10 +35,35 @@ async function updateNavbar() {
   }
 }
 
+/* =========================
+   PROFILE HELPER
+========================= */
+
+async function createOrUpdateProfile(user, mcNameFromInput = null) {
+  if (!user) return;
+
+  const mcName =
+    mcNameFromInput ||
+    user.user_metadata?.mc_name ||
+    "Steve";
+
+  await supabaseClient.from("profiles").upsert({
+    user_id: user.id,
+    mc_name: mcName,
+    downloads: 0
+  }, {
+    onConflict: "user_id"
+  });
+}
+
+/* =========================
+   REGISTER / LOGIN
+========================= */
+
 async function register() {
-  const email = document.getElementById("registerEmail").value;
+  const email = document.getElementById("registerEmail").value.trim();
   const password = document.getElementById("registerPassword").value;
-  const mcName = document.getElementById("registerMcName").value;
+  const mcName = document.getElementById("registerMcName").value.trim();
 
   if (!email || !password || !mcName) {
     alert("Bitte alles ausfüllen.");
@@ -57,19 +86,15 @@ async function register() {
   }
 
   if (data.user) {
-    await supabaseClient.from("profiles").insert({
-      user_id: data.user.id,
-      mc_name: mcName,
-      downloads: 0
-    });
+    await createOrUpdateProfile(data.user, mcName);
   }
 
-  alert("Account erstellt. Du kannst dich jetzt einloggen.");
+  alert("Account erstellt. Du erscheinst automatisch in der Community.");
   window.location.href = "login.html";
 }
 
 async function login() {
-  const email = document.getElementById("loginEmail").value;
+  const email = document.getElementById("loginEmail").value.trim();
   const password = document.getElementById("loginPassword").value;
 
   if (!email || !password) {
@@ -77,7 +102,7 @@ async function login() {
     return;
   }
 
-  const { error } = await supabaseClient.auth.signInWithPassword({
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
     email: email,
     password: password
   });
@@ -85,6 +110,10 @@ async function login() {
   if (error) {
     alert(error.message);
     return;
+  }
+
+  if (data.user) {
+    await createOrUpdateProfile(data.user);
   }
 
   window.location.href = "profile.html";
@@ -95,6 +124,127 @@ async function logout() {
   window.location.href = "index.html";
 }
 
+/* =========================
+   WEBSITE TEXTE
+========================= */
+
+async function getSetting(key, fallback) {
+  const { data } = await supabaseClient
+    .from("site_settings")
+    .select("value")
+    .eq("key", key)
+    .single();
+
+  return data ? data.value : fallback;
+}
+
+async function loadSiteTexts() {
+  const heroTitle = document.getElementById("heroTitle");
+  const heroSubtitle = document.getElementById("heroSubtitle");
+
+  const offer1Title = document.getElementById("offer1Title");
+  const offer1Text = document.getElementById("offer1Text");
+
+  const offer2Title = document.getElementById("offer2Title");
+  const offer2Text = document.getElementById("offer2Text");
+
+  const offer3Title = document.getElementById("offer3Title");
+  const offer3Text = document.getElementById("offer3Text");
+
+  if (heroTitle) heroTitle.innerHTML = await getSetting("hero_title", "Kostenlose Minecraft Plugins");
+  if (heroSubtitle) heroSubtitle.innerText = await getSetting("hero_subtitle", "Professionelle Plugins, kostenlose Aufträge und Support direkt über Discord.");
+
+  if (offer1Title) offer1Title.innerText = await getSetting("offer_1_title", "Gratis Plugins");
+  if (offer1Text) offer1Text.innerText = await getSetting("offer_1_text", "Fertige Minecraft Plugins kostenlos herunterladen.");
+
+  if (offer2Title) offer2Title.innerText = await getSetting("offer_2_title", "Gratis Aufträge");
+  if (offer2Text) offer2Text.innerText = await getSetting("offer_2_text", "Du brauchst ein eigenes Plugin? Schreib mir auf Discord.");
+
+  if (offer3Title) offer3Title.innerText = await getSetting("offer_3_title", "Bewertungen");
+  if (offer3Text) offer3Text.innerText = await getSetting("offer_3_text", "Nutzer können Plugins bewerten. Bewertungen werden zuerst geprüft.");
+}
+
+/* =========================
+   HOME
+========================= */
+
+async function loadHomePage() {
+  updateNavbar();
+  loadSiteTexts();
+
+  const homePlugins = document.getElementById("homePlugins");
+  const homeTopPlayers = document.getElementById("homeTopPlayers");
+
+  const { data: plugins } = await supabaseClient
+    .from("plugins")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (plugins) {
+    const count = document.getElementById("homePluginCount");
+    if (count) count.innerText = plugins.length;
+
+    if (homePlugins) {
+      homePlugins.innerHTML = "";
+
+      if (plugins.length === 0) {
+        homePlugins.innerHTML = "<p>Noch keine Plugins vorhanden.</p>";
+      }
+
+      plugins.slice(0, 3).forEach(plugin => {
+        homePlugins.innerHTML += `
+          <div class="card">
+            <h3>${plugin.name}</h3>
+            <p>${plugin.short_description}</p>
+            <p>Version: ${plugin.version}</p>
+            <a href="plugin-detail.html?id=${plugin.id}">Weitere Infos</a>
+          </div>
+        `;
+      });
+    }
+  }
+
+  const { data: players } = await supabaseClient
+    .from("public_community")
+    .select("*")
+    .order("downloads", { ascending: false });
+
+  if (players) {
+    const userCount = document.getElementById("homeUserCount");
+    if (userCount) userCount.innerText = players.length;
+
+    let totalDownloads = 0;
+    players.forEach(player => totalDownloads += player.downloads);
+
+    const downloadCount = document.getElementById("homeDownloadCount");
+    if (downloadCount) downloadCount.innerText = totalDownloads;
+
+    if (homeTopPlayers) {
+      homeTopPlayers.innerHTML = "";
+
+      if (players.length === 0) {
+        homeTopPlayers.innerHTML = "<p>Noch keine Community-Mitglieder vorhanden.</p>";
+      }
+
+      players.slice(0, 10).forEach((player, index) => {
+        homeTopPlayers.innerHTML += `
+          <div class="card">
+            <h3>#${index + 1} ${player.mc_name}</h3>
+            <img class="community-avatar" src="https://mc-heads.net/avatar/${player.mc_name}">
+            <p>Downloads: ${player.downloads}</p>
+            <p>Bewertungen: ${player.review_count}</p>
+            <a href="player.html?id=${player.user_id}">Profil ansehen</a>
+          </div>
+        `;
+      });
+    }
+  }
+}
+
+/* =========================
+   PROFILE
+========================= */
+
 async function loadProfile() {
   updateNavbar();
 
@@ -104,6 +254,8 @@ async function loadProfile() {
     window.location.href = "login.html";
     return;
   }
+
+  await createOrUpdateProfile(userData.user);
 
   const userId = userData.user.id;
   const email = userData.user.email;
@@ -155,6 +307,10 @@ async function loadMyReviews(userId) {
   });
 }
 
+/* =========================
+   COMMUNITY
+========================= */
+
 async function loadCommunity() {
   updateNavbar();
 
@@ -173,6 +329,10 @@ async function loadCommunity() {
 
   if (topPlayers) {
     topPlayers.innerHTML = "";
+
+    if (data.length === 0) {
+      topPlayers.innerHTML = "<p>Noch keine Spieler registriert.</p>";
+    }
 
     data.slice(0, 10).forEach((player, index) => {
       topPlayers.innerHTML += `
@@ -213,6 +373,10 @@ async function loadCommunity() {
     });
   }
 }
+
+/* =========================
+   PUBLIC PLAYER PROFILE
+========================= */
 
 async function loadPlayerProfile() {
   updateNavbar();
@@ -277,73 +441,9 @@ async function loadPlayerProfile() {
   });
 }
 
-async function loadHomePage() {
-  updateNavbar();
-
-  const homePlugins = document.getElementById("homePlugins");
-  const homeTopPlayers = document.getElementById("homeTopPlayers");
-
-  const { data: plugins } = await supabaseClient
-    .from("plugins")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (plugins) {
-    document.getElementById("homePluginCount").innerText = plugins.length;
-
-    if (homePlugins) {
-      homePlugins.innerHTML = "";
-
-      if (plugins.length === 0) {
-        homePlugins.innerHTML = "<p>Noch keine Plugins vorhanden.</p>";
-      }
-
-      plugins.slice(0, 3).forEach(plugin => {
-        homePlugins.innerHTML += `
-          <div class="card">
-            <h3>${plugin.name}</h3>
-            <p>${plugin.short_description}</p>
-            <p>Version: ${plugin.version}</p>
-            <a href="plugin-detail.html?id=${plugin.id}">Weitere Infos</a>
-          </div>
-        `;
-      });
-    }
-  }
-
-  const { data: players } = await supabaseClient
-    .from("public_community")
-    .select("*")
-    .order("downloads", { ascending: false });
-
-  if (players) {
-    document.getElementById("homeUserCount").innerText = players.length;
-
-    let totalDownloads = 0;
-    players.forEach(player => totalDownloads += player.downloads);
-    document.getElementById("homeDownloadCount").innerText = totalDownloads;
-
-    if (homeTopPlayers) {
-      homeTopPlayers.innerHTML = "";
-
-      if (players.length === 0) {
-        homeTopPlayers.innerHTML = "<p>Noch keine Community-Mitglieder vorhanden.</p>";
-      }
-
-      players.slice(0, 10).forEach((player, index) => {
-        homeTopPlayers.innerHTML += `
-          <div class="card">
-            <h3>#${index + 1} ${player.mc_name}</h3>
-            <img class="community-avatar" src="https://mc-heads.net/avatar/${player.mc_name}">
-            <p>Downloads: ${player.downloads}</p>
-            <p>Bewertungen: ${player.review_count}</p>
-            <a href="player.html?id=${player.user_id}">Profil ansehen</a>
-          </div>
-        `;
-      });
-    }
-  }
-}
+/* =========================
+   PLUGINS
+========================= */
 
 async function loadPlugins() {
   updateNavbar();
@@ -386,6 +486,8 @@ async function downloadPlugin(pluginName) {
   const { data: userData } = await supabaseClient.auth.getUser();
 
   if (userData.user) {
+    await createOrUpdateProfile(userData.user);
+
     const { data: profile } = await supabaseClient
       .from("profiles")
       .select("downloads")
@@ -402,6 +504,10 @@ async function downloadPlugin(pluginName) {
 
   alert(pluginName + " Download startet.");
 }
+
+/* =========================
+   PLUGIN DETAIL + REVIEWS
+========================= */
 
 async function loadPluginDetail() {
   updateNavbar();
@@ -481,6 +587,8 @@ async function submitReview() {
     return;
   }
 
+  await createOrUpdateProfile(userData.user);
+
   const { data: plugin } = await supabaseClient
     .from("plugins")
     .select("name")
@@ -515,6 +623,10 @@ async function submitReview() {
   document.getElementById("reviewComment").value = "";
 }
 
+/* =========================
+   ADMIN
+========================= */
+
 async function isCurrentUserAdmin() {
   const { data: userData } = await supabaseClient.auth.getUser();
 
@@ -545,8 +657,54 @@ async function loadAdminPanel() {
   adminAccess.style.display = "none";
   adminPanel.style.display = "block";
 
+  loadTextAdmin();
   loadPendingReviews();
   loadAdminPlugins();
+}
+
+async function loadTextAdmin() {
+  const textAdmin = document.getElementById("textAdmin");
+  if (!textAdmin) return;
+
+  const keys = [
+    "hero_title",
+    "hero_subtitle",
+    "offer_1_title",
+    "offer_1_text",
+    "offer_2_title",
+    "offer_2_text",
+    "offer_3_title",
+    "offer_3_text",
+    "discord_url"
+  ];
+
+  textAdmin.innerHTML = "";
+
+  for (const key of keys) {
+    const value = await getSetting(key, "");
+    textAdmin.innerHTML += `
+      <div class="card">
+        <h3>${key}</h3>
+        <textarea id="setting_${key}">${value}</textarea>
+        <button onclick="saveSetting('${key}')">Speichern</button>
+      </div>
+    `;
+  }
+}
+
+async function saveSetting(key) {
+  const value = document.getElementById("setting_" + key).value;
+
+  const { error } = await supabaseClient
+    .from("site_settings")
+    .upsert({ key: key, value: value });
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  alert("Text gespeichert.");
 }
 
 async function addPlugin() {
