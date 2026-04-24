@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Community - Minecraft Developer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body onload="loadCommunity()">
+
+<nav>
+  <h2>Minecraft Developer</h2>
+  <div>
+    <a href="index.html">Start</a>
+    <a href="plugins.html">Plugins</a>
+    <a href="community.html">Community</a>
+
+    <a id="loginNav" href="login.html">Login / Registrieren</a>
+
+    <a id="profileNav" href="profile.html" style="display:none;">
+      <img id="navAvatar" class="nav-avatar" src="https://mc-heads.net/avatar/Steve" alt="Profil">
+    </a>
+  </div>
+</nav>
+
+<section class="content">
+  <h1>Community</h1>
+  <p>Alle registrierten Minecraft-Spieler</p>
+
+  <div id="communityList" class="cards"></div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="script.js"></script>
+</body>
+</html>
