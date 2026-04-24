@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Profil - Minecraft Developer</title>
+  <title>Mein Profil</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body onload="loadProfile()">
@@ -12,26 +12,33 @@
   <div>
     <a href="index.html">Start</a>
     <a href="plugins.html">Plugins</a>
+    <a href="community.html">Community</a>
 
     <a id="loginNav" href="login.html">Login</a>
+    <a id="registerNav" href="register.html">Registrieren</a>
 
     <a id="profileNav" href="profile.html" style="display:none;">
-      <img id="navAvatar" class="nav-avatar" src="https://mc-heads.net/avatar/Steve" alt="Profil">
+      <img id="navAvatar" class="nav-avatar" src="https://mc-heads.net/avatar/Steve">
     </a>
-
-    <a class="discord" href="https://discord.gg/DEIN-LINK" target="_blank">Discord</a>
   </div>
 </nav>
 
 <section class="profile-box">
   <h1>Mein Profil</h1>
 
-  <img id="mcAvatar" src="https://mc-heads.net/avatar/Steve" alt="Minecraft Kopf">
+  <img id="mcAvatar" src="https://mc-heads.net/avatar/Steve">
 
-  <h2 id="profileName">Nicht eingeloggt</h2>
+  <h2 id="profileName">Lädt...</h2>
   <p id="profileEmail"></p>
 
+  <p>Meine Downloads: <strong id="profileDownloads">0</strong></p>
+
   <button onclick="logout()">Ausloggen</button>
+</section>
+
+<section class="content">
+  <h2>Meine Bewertungen</h2>
+  <div id="myReviews" class="cards"></div>
 </section>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
