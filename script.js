@@ -1,5 +1,5 @@
-const SUPABASE_URL = "https://fvoqwqarrlewwonzsydh.supabase.co";
-const SUPABASE_KEY = "sb_publishable_78UTQOor9uK3v_sDHF0YgA_Xgli01AM";
+const SUPABASE_URL = "DEINE_SUPABASE_URL";
+const SUPABASE_KEY = "DEIN_PUBLISHABLE_KEY";
 
 let supabaseClient = null;
 
@@ -7,59 +7,35 @@ if (typeof supabase !== "undefined") {
   supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 }
 
-/* =========================
-   DOWNLOAD COUNTER
-========================= */
+/* NAVBAR */
 
-async function downloadPlugin(pluginName) {
-  let downloads = localStorage.getItem("downloads");
+async function updateNavbar() {
+  if (!supabaseClient) return;
 
-  if (!downloads) {
-    downloads = 0;
-  }
+  const loginNav = document.getElementById("loginNav");
+  const registerNav = document.getElementById("registerNav");
+  const profileNav = document.getElementById("profileNav");
+  const navAvatar = document.getElementById("navAvatar");
 
-  downloads++;
-  localStorage.setItem("downloads", downloads);
+  const { data } = await supabaseClient.auth.getUser();
 
-  const { data: userData } = await supabaseClient.auth.getUser();
+  if (data.user) {
+    const mcName = data.user.user_metadata.mc_name || "Steve";
 
-  if (userData.user) {
-    const { data: profile } = await supabaseClient
-      .from("profiles")
-      .select("downloads")
-      .eq("user_id", userData.user.id)
-      .single();
-
-    if (profile) {
-      await supabaseClient
-        .from("profiles")
-        .update({ downloads: profile.downloads + 1 })
-        .eq("user_id", userData.user.id);
-    }
-  }
-
-  alert(pluginName + " Download startet bald!");
-}
-
-function updateDownloadCounter() {
-  const counter = document.getElementById("downloadCount");
-
-  if (counter) {
-    const downloads = localStorage.getItem("downloads") || 0;
-    counter.innerText = downloads;
+    if (loginNav) loginNav.style.display = "none";
+    if (registerNav) registerNav.style.display = "none";
+    if (profileNav) profileNav.style.display = "inline-block";
+    if (navAvatar) navAvatar.src = "https://mc-heads.net/avatar/" + mcName;
+  } else {
+    if (loginNav) loginNav.style.display = "inline-block";
+    if (registerNav) registerNav.style.display = "inline-block";
+    if (profileNav) profileNav.style.display = "none";
   }
 }
 
-/* =========================
-   REGISTER / LOGIN
-========================= */
+/* REGISTER / LOGIN */
 
 async function register() {
-  if (!supabaseClient) {
-    alert("Supabase ist noch nicht verbunden.");
-    return;
-  }
-
   const email = document.getElementById("registerEmail").value;
   const password = document.getElementById("registerPassword").value;
   const mcName = document.getElementById("registerMcName").value;
@@ -92,28 +68,11 @@ async function register() {
     });
   }
 
-  alert("Account erstellt. Du wirst jetzt zum Profil weitergeleitet.");
-
-  await loginAfterRegister(email, password);
-}
-
-async function loginAfterRegister(email, password) {
-  const { error } = await supabaseClient.auth.signInWithPassword({
-    email: email,
-    password: password
-  });
-
-  if (!error) {
-    window.location.href = "profile.html";
-  }
+  alert("Account erstellt. Du kannst dich jetzt einloggen.");
+  window.location.href = "login.html";
 }
 
 async function login() {
-  if (!supabaseClient) {
-    alert("Supabase ist noch nicht verbunden.");
-    return;
-  }
-
   const email = document.getElementById("loginEmail").value;
   const password = document.getElementById("loginPassword").value;
 
@@ -136,65 +95,23 @@ async function login() {
 }
 
 async function logout() {
-  if (!supabaseClient) {
-    return;
-  }
-
   await supabaseClient.auth.signOut();
   window.location.href = "index.html";
 }
 
-/* =========================
-   NAVBAR
-========================= */
-
-async function updateNavbar() {
-  if (!supabaseClient) {
-    return;
-  }
-
-  const loginNav = document.getElementById("loginNav");
-  const profileNav = document.getElementById("profileNav");
-  const navAvatar = document.getElementById("navAvatar");
-
-  if (!loginNav || !profileNav || !navAvatar) {
-    return;
-  }
-
-  const { data } = await supabaseClient.auth.getUser();
-
-  if (data.user) {
-    const mcName = data.user.user_metadata.mc_name || "Steve";
-
-    loginNav.style.display = "none";
-    profileNav.style.display = "inline-block";
-    navAvatar.src = "https://mc-heads.net/avatar/" + mcName;
-  } else {
-    loginNav.style.display = "inline-block";
-    profileNav.style.display = "none";
-  }
-}
-
-/* =========================
-   PROFILE
-========================= */
+/* PROFILE */
 
 async function loadProfile() {
   updateNavbar();
 
-  if (!supabaseClient) {
-    document.getElementById("profileName").innerText = "Supabase nicht verbunden";
-    return;
-  }
-
   const { data: userData } = await supabaseClient.auth.getUser();
 
   if (!userData.user) {
-    document.getElementById("profileName").innerText = "Nicht eingeloggt";
-    document.getElementById("profileEmail").innerText = "Bitte logge dich zuerst ein.";
+    window.location.href = "login.html";
     return;
   }
 
+  const userId = userData.user.id;
   const email = userData.user.email;
   const mcName = userData.user.user_metadata.mc_name || "Steve";
 
@@ -205,22 +122,19 @@ async function loadProfile() {
   const { data: profile } = await supabaseClient
     .from("profiles")
     .select("*")
-    .eq("user_id", userData.user.id)
+    .eq("user_id", userId)
     .single();
 
-  if (profile && document.getElementById("profileDownloads")) {
+  if (profile) {
     document.getElementById("profileDownloads").innerText = profile.downloads;
   }
 
-  loadMyReviews(userData.user.id);
+  loadMyReviews(userId);
 }
 
 async function loadMyReviews(userId) {
   const myReviews = document.getElementById("myReviews");
-
-  if (!myReviews) {
-    return;
-  }
+  if (!myReviews) return;
 
   const { data, error } = await supabaseClient
     .from("reviews")
@@ -228,13 +142,8 @@ async function loadMyReviews(userId) {
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
-  if (error) {
-    myReviews.innerHTML = "<p>Bewertungen konnten nicht geladen werden.</p>";
-    return;
-  }
-
-  if (data.length === 0) {
-    myReviews.innerHTML = "<p>Du hast noch keine Bewertungen geschrieben.</p>";
+  if (error || data.length === 0) {
+    myReviews.innerHTML = "<p>Noch keine Bewertungen geschrieben.</p>";
     return;
   }
 
@@ -252,84 +161,163 @@ async function loadMyReviews(userId) {
   });
 }
 
-/* =========================
-   COMMUNITY
-========================= */
+/* COMMUNITY */
 
 async function loadCommunity() {
   updateNavbar();
 
   const communityList = document.getElementById("communityList");
-
-  if (!communityList) {
-    return;
-  }
+  const topPlayers = document.getElementById("topPlayers");
 
   const { data, error } = await supabaseClient
     .from("public_community")
     .select("*")
     .order("downloads", { ascending: false });
 
-  if (error) {
-    communityList.innerHTML = "<p>Community konnte nicht geladen werden.</p>";
+  if (error || !data) {
+    if (communityList) communityList.innerHTML = "<p>Community konnte nicht geladen werden.</p>";
     return;
   }
 
-  if (data.length === 0) {
-    communityList.innerHTML = "<p>Noch keine Spieler registriert.</p>";
+  if (topPlayers) {
+    topPlayers.innerHTML = "";
+
+    data.slice(0, 10).forEach((player, index) => {
+      topPlayers.innerHTML += `
+        <div class="card">
+          <h3>#${index + 1} ${player.mc_name}</h3>
+          <img class="community-avatar" src="https://mc-heads.net/avatar/${player.mc_name}">
+          <p>Downloads: ${player.downloads}</p>
+          <p>Bewertungen: ${player.review_count}</p>
+          <p>Durchschnitt: ${player.avg_stars} ⭐</p>
+          <a href="player.html?id=${player.user_id}">Profil ansehen</a>
+        </div>
+      `;
+    });
+  }
+
+  if (communityList) {
+    communityList.innerHTML = "";
+
+    if (data.length === 0) {
+      communityList.innerHTML = "<p>Noch keine Spieler registriert.</p>";
+      return;
+    }
+
+    data.forEach(player => {
+      const joinedDate = new Date(player.created_at).toLocaleDateString("de-DE");
+
+      communityList.innerHTML += `
+        <div class="card">
+          <img class="community-avatar" src="https://mc-heads.net/avatar/${player.mc_name}">
+          <h3>${player.mc_name}</h3>
+          <p>Downloads: ${player.downloads}</p>
+          <p>Bewertungen: ${player.review_count}</p>
+          <p>Durchschnitt: ${player.avg_stars} ⭐</p>
+          <p>Mitglied seit: ${joinedDate}</p>
+          <a href="player.html?id=${player.user_id}">Profil ansehen</a>
+        </div>
+      `;
+    });
+  }
+}
+
+/* PLAYER PUBLIC PROFILE */
+
+async function loadPlayerProfile() {
+  updateNavbar();
+
+  const params = new URLSearchParams(window.location.search);
+  const playerId = params.get("id");
+
+  const playerBox = document.getElementById("playerProfile");
+  const playerReviews = document.getElementById("playerReviews");
+
+  if (!playerId) {
+    playerBox.innerHTML = "<p>Spieler nicht gefunden.</p>";
     return;
   }
 
-  communityList.innerHTML = "";
+  const { data: player, error } = await supabaseClient
+    .from("public_community")
+    .select("*")
+    .eq("user_id", playerId)
+    .single();
 
-  data.forEach(player => {
-    const joinedDate = new Date(player.created_at).toLocaleDateString("de-DE");
+  if (error || !player) {
+    playerBox.innerHTML = "<p>Spieler nicht gefunden.</p>";
+    return;
+  }
 
-    communityList.innerHTML += `
+  const joinedDate = new Date(player.created_at).toLocaleDateString("de-DE");
+
+  playerBox.innerHTML = `
+    <div class="profile-box">
+      <img id="mcAvatar" src="https://mc-heads.net/avatar/${player.mc_name}">
+      <h1>${player.mc_name}</h1>
+      <p>Downloads: ${player.downloads}</p>
+      <p>Bewertungen: ${player.review_count}</p>
+      <p>Durchschnitt: ${player.avg_stars} ⭐</p>
+      <p>Mitglied seit: ${joinedDate}</p>
+    </div>
+  `;
+
+  const { data: reviews } = await supabaseClient
+    .from("reviews")
+    .select("*")
+    .eq("user_id", playerId)
+    .eq("approved", true)
+    .order("created_at", { ascending: false });
+
+  playerReviews.innerHTML = "";
+
+  if (!reviews || reviews.length === 0) {
+    playerReviews.innerHTML = "<p>Keine öffentlichen Bewertungen.</p>";
+    return;
+  }
+
+  reviews.forEach(review => {
+    playerReviews.innerHTML += `
       <div class="card">
-        <img class="community-avatar" src="https://mc-heads.net/avatar/${player.mc_name}" alt="${player.mc_name}">
-        <h3>${player.mc_name}</h3>
-        <p>Downloads: ${player.downloads}</p>
-        <p>Bewertungen: ${player.review_count}</p>
-        <p>Durchschnitt: ${player.avg_stars} ⭐</p>
-        <p>Mitglied seit: ${joinedDate}</p>
+        <h3>${review.plugin_name || "Plugin"}</h3>
+        <p class="star">${"★".repeat(review.stars)}${"☆".repeat(5 - review.stars)}</p>
+        <p>${review.comment}</p>
       </div>
     `;
   });
 }
 
-/* =========================
-   PLUGINS
-========================= */
+/* PLUGINS */
 
 async function loadPlugins() {
   updateNavbar();
 
   const pluginList = document.getElementById("pluginList");
-
-  if (!pluginList) {
-    return;
-  }
+  if (!pluginList) return;
 
   const { data, error } = await supabaseClient
     .from("plugins")
     .select("*")
     .order("created_at", { ascending: false });
 
-  if (error) {
+  if (error || !data) {
     pluginList.innerHTML = "<p>Plugins konnten nicht geladen werden.</p>";
     return;
   }
 
   pluginList.innerHTML = "";
 
+  if (data.length === 0) {
+    pluginList.innerHTML = "<p>Noch keine Plugins vorhanden.</p>";
+    return;
+  }
+
   data.forEach(plugin => {
     pluginList.innerHTML += `
       <div class="card">
         <h3>${plugin.name}</h3>
         <p>${plugin.short_description}</p>
-        <span>Version: ${plugin.version}</span>
-        <br><br>
+        <p>Version: ${plugin.version}</p>
         <a href="plugin-detail.html?id=${plugin.id}">Weitere Infos</a>
         <br><br>
         <a href="${plugin.download_url}" target="_blank" onclick="downloadPlugin('${plugin.name}')">Download</a>
@@ -338,9 +326,28 @@ async function loadPlugins() {
   });
 }
 
-/* =========================
-   PLUGIN DETAILS + REVIEWS
-========================= */
+async function downloadPlugin(pluginName) {
+  const { data: userData } = await supabaseClient.auth.getUser();
+
+  if (userData.user) {
+    const { data: profile } = await supabaseClient
+      .from("profiles")
+      .select("downloads")
+      .eq("user_id", userData.user.id)
+      .single();
+
+    if (profile) {
+      await supabaseClient
+        .from("profiles")
+        .update({ downloads: profile.downloads + 1 })
+        .eq("user_id", userData.user.id);
+    }
+  }
+
+  alert(pluginName + " Download startet.");
+}
+
+/* PLUGIN DETAIL + REVIEWS */
 
 async function loadPluginDetail() {
   updateNavbar();
@@ -348,7 +355,10 @@ async function loadPluginDetail() {
   const params = new URLSearchParams(window.location.search);
   const pluginId = params.get("id");
 
+  const detail = document.getElementById("pluginDetail");
+
   if (!pluginId) {
+    detail.innerHTML = "<p>Plugin nicht gefunden.</p>";
     return;
   }
 
@@ -359,16 +369,18 @@ async function loadPluginDetail() {
     .single();
 
   if (error || !plugin) {
-    document.getElementById("pluginDetail").innerHTML = "<p>Plugin nicht gefunden.</p>";
+    detail.innerHTML = "<p>Plugin nicht gefunden.</p>";
     return;
   }
 
-  document.getElementById("pluginDetail").innerHTML = `
-    <h1>${plugin.name}</h1>
-    <p><strong>Version:</strong> ${plugin.version}</p>
-    <p>${plugin.full_description}</p>
-    <br>
-    <a href="${plugin.download_url}" target="_blank" onclick="downloadPlugin('${plugin.name}')">Download</a>
+  detail.innerHTML = `
+    <div class="profile-box">
+      <h1>${plugin.name}</h1>
+      <p><strong>Version:</strong> ${plugin.version}</p>
+      <p>${plugin.full_description}</p>
+      <br>
+      <a href="${plugin.download_url}" target="_blank" onclick="downloadPlugin('${plugin.name}')">Download</a>
+    </div>
   `;
 
   loadReviews(pluginId);
@@ -376,29 +388,21 @@ async function loadPluginDetail() {
 
 async function loadReviews(pluginId) {
   const reviewList = document.getElementById("reviewList");
+  if (!reviewList) return;
 
-  if (!reviewList) {
-    return;
-  }
-
-  const { data, error } = await supabaseClient
+  const { data } = await supabaseClient
     .from("reviews")
     .select("*")
     .eq("plugin_id", pluginId)
     .eq("approved", true)
     .order("created_at", { ascending: false });
 
-  if (error) {
-    reviewList.innerHTML = "<p>Bewertungen konnten nicht geladen werden.</p>";
-    return;
-  }
+  reviewList.innerHTML = "";
 
-  if (data.length === 0) {
+  if (!data || data.length === 0) {
     reviewList.innerHTML = "<p>Noch keine Bewertungen vorhanden.</p>";
     return;
   }
-
-  reviewList.innerHTML = "";
 
   data.forEach(review => {
     reviewList.innerHTML += `
@@ -429,7 +433,7 @@ async function submitReview() {
     .eq("id", pluginId)
     .single();
 
-  const stars = document.getElementById("reviewStars").value;
+  const stars = Number(document.getElementById("reviewStars").value);
   const comment = document.getElementById("reviewComment").value;
   const mcName = userData.user.user_metadata.mc_name || "Unbekannt";
 
@@ -438,17 +442,15 @@ async function submitReview() {
     return;
   }
 
-  const { error } = await supabaseClient
-    .from("reviews")
-    .insert({
-      plugin_id: pluginId,
-      plugin_name: plugin ? plugin.name : "Plugin",
-      user_id: userData.user.id,
-      mc_name: mcName,
-      stars: Number(stars),
-      comment: comment,
-      approved: false
-    });
+  const { error } = await supabaseClient.from("reviews").insert({
+    plugin_id: pluginId,
+    plugin_name: plugin ? plugin.name : "Plugin",
+    user_id: userData.user.id,
+    mc_name: mcName,
+    stars: stars,
+    comment: comment,
+    approved: false
+  });
 
   if (error) {
     alert(error.message);
@@ -459,27 +461,25 @@ async function submitReview() {
   document.getElementById("reviewComment").value = "";
 }
 
-/* =========================
-   ADMIN
-========================= */
+/* ADMIN */
 
 async function isCurrentUserAdmin() {
-  if (!supabaseClient) return false;
-
   const { data: userData } = await supabaseClient.auth.getUser();
 
   if (!userData.user) return false;
 
-  const { data, error } = await supabaseClient
+  const { data } = await supabaseClient
     .from("admins")
     .select("*")
     .eq("user_id", userData.user.id)
     .single();
 
-  return !!data && !error;
+  return !!data;
 }
 
 async function loadAdminPanel() {
+  updateNavbar();
+
   const adminAccess = document.getElementById("adminAccess");
   const adminPanel = document.getElementById("adminPanel");
 
@@ -509,15 +509,13 @@ async function addPlugin() {
     return;
   }
 
-  const { error } = await supabaseClient
-    .from("plugins")
-    .insert({
-      name: name,
-      version: version,
-      short_description: shortDescription,
-      full_description: fullDescription,
-      download_url: downloadUrl
-    });
+  const { error } = await supabaseClient.from("plugins").insert({
+    name: name,
+    version: version,
+    short_description: shortDescription,
+    full_description: fullDescription,
+    download_url: downloadUrl
+  });
 
   if (error) {
     alert(error.message);
@@ -528,26 +526,64 @@ async function addPlugin() {
   location.reload();
 }
 
+async function loadAdminPlugins() {
+  const adminPlugins = document.getElementById("adminPlugins");
+
+  const { data } = await supabaseClient
+    .from("plugins")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  adminPlugins.innerHTML = "";
+
+  if (!data || data.length === 0) {
+    adminPlugins.innerHTML = "<p>Keine Plugins vorhanden.</p>";
+    return;
+  }
+
+  data.forEach(plugin => {
+    adminPlugins.innerHTML += `
+      <div class="card">
+        <h3>${plugin.name}</h3>
+        <p>${plugin.short_description}</p>
+        <button class="danger" onclick="deletePlugin('${plugin.id}')">Plugin löschen</button>
+      </div>
+    `;
+  });
+}
+
+async function deletePlugin(pluginId) {
+  if (!confirm("Plugin wirklich löschen?")) return;
+
+  const { error } = await supabaseClient
+    .from("plugins")
+    .delete()
+    .eq("id", pluginId);
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  alert("Plugin gelöscht.");
+  loadAdminPlugins();
+}
+
 async function loadPendingReviews() {
   const pendingReviews = document.getElementById("pendingReviews");
 
-  const { data, error } = await supabaseClient
+  const { data } = await supabaseClient
     .from("reviews")
     .select("*")
     .eq("approved", false)
     .order("created_at", { ascending: false });
 
-  if (error) {
-    pendingReviews.innerHTML = "<p>Bewertungen konnten nicht geladen werden.</p>";
-    return;
-  }
+  pendingReviews.innerHTML = "";
 
-  if (data.length === 0) {
+  if (!data || data.length === 0) {
     pendingReviews.innerHTML = "<p>Keine offenen Bewertungen.</p>";
     return;
   }
-
-  pendingReviews.innerHTML = "";
 
   data.forEach(review => {
     pendingReviews.innerHTML += `
@@ -593,52 +629,4 @@ async function deleteReview(reviewId) {
   loadPendingReviews();
 }
 
-async function loadAdminPlugins() {
-  const adminPlugins = document.getElementById("adminPlugins");
-
-  const { data, error } = await supabaseClient
-    .from("plugins")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    adminPlugins.innerHTML = "<p>Plugins konnten nicht geladen werden.</p>";
-    return;
-  }
-
-  adminPlugins.innerHTML = "";
-
-  data.forEach(plugin => {
-    adminPlugins.innerHTML += `
-      <div class="card">
-        <h3>${plugin.name}</h3>
-        <p>${plugin.short_description}</p>
-        <button class="danger" onclick="deletePlugin('${plugin.id}')">Plugin löschen</button>
-      </div>
-    `;
-  });
-}
-
-async function deletePlugin(pluginId) {
-  if (!confirm("Plugin wirklich löschen?")) return;
-
-  const { error } = await supabaseClient
-    .from("plugins")
-    .delete()
-    .eq("id", pluginId);
-
-  if (error) {
-    alert(error.message);
-    return;
-  }
-
-  alert("Plugin gelöscht.");
-  loadAdminPlugins();
-}
-
-/* =========================
-   START
-========================= */
-
-updateDownloadCounter();
 updateNavbar();
