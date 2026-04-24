@@ -1,0 +1,177 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #070b12;
+  color: white;
+  font-family: Arial, sans-serif;
+}
+
+nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 25px 8%;
+  background: #0c111c;
+  border-bottom: 1px solid #1d2a3d;
+}
+
+nav h2 {
+  color: #58ff7a;
+}
+
+nav a {
+  color: white;
+  text-decoration: none;
+  margin-left: 20px;
+}
+
+.discord {
+  background: #5865F2;
+  padding: 10px 16px;
+  border-radius: 8px;
+}
+
+.hero {
+  text-align: center;
+  padding: 120px 20px;
+  background: linear-gradient(135deg, #06110a, #101b2e);
+}
+
+.hero h1 {
+  font-size: 55px;
+  color: #58ff7a;
+}
+
+.hero p {
+  font-size: 22px;
+  margin: 20px 0;
+  color: #c9d4e5;
+}
+
+.buttons a,
+button {
+  display: inline-block;
+  background: #58ff7a;
+  color: #06110a;
+  padding: 14px 25px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  margin: 10px;
+}
+
+.stats {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  padding: 50px 20px;
+}
+
+.stats div {
+  background: #0c111c;
+  padding: 30px;
+  border-radius: 15px;
+  width: 180px;
+  text-align: center;
+  border: 1px solid #1d2a3d;
+}
+
+.stats h3 {
+  font-size: 35px;
+  color: #58ff7a;
+}
+
+.content {
+  padding: 70px 8%;
+  text-align: center;
+}
+
+.content h1,
+.content h2 {
+  color: #58ff7a;
+  margin-bottom: 20px;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 25px;
+  margin-top: 40px;
+}
+
+.card {
+  background: #0c111c;
+  border: 1px solid #1d2a3d;
+  padding: 30px;
+  border-radius: 18px;
+  text-align: left;
+  box-shadow: 0 0 25px rgba(88, 255, 122, 0.08);
+}
+
+.card h3 {
+  color: #58ff7a;
+  margin-bottom: 15px;
+}
+
+.card p {
+  color: #c9d4e5;
+  margin-bottom: 15px;
+}
+
+.auth-box,
+.profile-box {
+  max-width: 450px;
+  margin: 80px auto;
+  padding: 40px;
+  background: #0c111c;
+  border-radius: 18px;
+  border: 1px solid #1d2a3d;
+  text-align: center;
+}
+
+input {
+  width: 100%;
+  padding: 14px;
+  margin: 10px 0;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+}
+
+.profile-box img {
+  width: 120px;
+  border-radius: 15px;
+  margin: 20px;
+}
+
+footer {
+  text-align: center;
+  padding: 30px;
+  background: #0c111c;
+  color: #9ba8bd;
+}
+
+@media (max-width: 700px) {
+  nav {
+    flex-direction: column;
+  }
+
+  nav div {
+    margin-top: 15px;
+  }
+
+  .hero h1 {
+    font-size: 36px;
+  }
+
+  .stats {
+    flex-direction: column;
+    align-items: center;
+  }
+}
