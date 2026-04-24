@@ -195,3 +195,10 @@ footer {
     align-items: center;
   }
 }
+.community-avatar {
+  width: 90px;
+  height: 90px;
+  border-radius: 14px;
+  border: 2px solid #58ff7a;
+  margin-bottom: 15px;
+}
