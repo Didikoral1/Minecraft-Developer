@@ -7,8 +7,6 @@ if (typeof supabase !== "undefined") {
   supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 }
 
-/* NAVBAR */
-
 async function updateNavbar() {
   if (!supabaseClient) return;
 
@@ -32,8 +30,6 @@ async function updateNavbar() {
     if (profileNav) profileNav.style.display = "none";
   }
 }
-
-/* REGISTER / LOGIN */
 
 async function register() {
   const email = document.getElementById("registerEmail").value;
@@ -99,8 +95,6 @@ async function logout() {
   window.location.href = "index.html";
 }
 
-/* PROFILE */
-
 async function loadProfile() {
   updateNavbar();
 
@@ -125,7 +119,7 @@ async function loadProfile() {
     .eq("user_id", userId)
     .single();
 
-  if (profile) {
+  if (profile && document.getElementById("profileDownloads")) {
     document.getElementById("profileDownloads").innerText = profile.downloads;
   }
 
@@ -142,7 +136,7 @@ async function loadMyReviews(userId) {
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
-  if (error || data.length === 0) {
+  if (error || !data || data.length === 0) {
     myReviews.innerHTML = "<p>Noch keine Bewertungen geschrieben.</p>";
     return;
   }
@@ -160,8 +154,6 @@ async function loadMyReviews(userId) {
     `;
   });
 }
-
-/* COMMUNITY */
 
 async function loadCommunity() {
   updateNavbar();
@@ -222,8 +214,6 @@ async function loadCommunity() {
   }
 }
 
-/* PLAYER PUBLIC PROFILE */
-
 async function loadPlayerProfile() {
   updateNavbar();
 
@@ -253,7 +243,7 @@ async function loadPlayerProfile() {
 
   playerBox.innerHTML = `
     <div class="profile-box">
-      <img id="mcAvatar" src="https://mc-heads.net/avatar/${player.mc_name}">
+      <img src="https://mc-heads.net/avatar/${player.mc_name}">
       <h1>${player.mc_name}</h1>
       <p>Downloads: ${player.downloads}</p>
       <p>Bewertungen: ${player.review_count}</p>
@@ -287,7 +277,73 @@ async function loadPlayerProfile() {
   });
 }
 
-/* PLUGINS */
+async function loadHomePage() {
+  updateNavbar();
+
+  const homePlugins = document.getElementById("homePlugins");
+  const homeTopPlayers = document.getElementById("homeTopPlayers");
+
+  const { data: plugins } = await supabaseClient
+    .from("plugins")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (plugins) {
+    document.getElementById("homePluginCount").innerText = plugins.length;
+
+    if (homePlugins) {
+      homePlugins.innerHTML = "";
+
+      if (plugins.length === 0) {
+        homePlugins.innerHTML = "<p>Noch keine Plugins vorhanden.</p>";
+      }
+
+      plugins.slice(0, 3).forEach(plugin => {
+        homePlugins.innerHTML += `
+          <div class="card">
+            <h3>${plugin.name}</h3>
+            <p>${plugin.short_description}</p>
+            <p>Version: ${plugin.version}</p>
+            <a href="plugin-detail.html?id=${plugin.id}">Weitere Infos</a>
+          </div>
+        `;
+      });
+    }
+  }
+
+  const { data: players } = await supabaseClient
+    .from("public_community")
+    .select("*")
+    .order("downloads", { ascending: false });
+
+  if (players) {
+    document.getElementById("homeUserCount").innerText = players.length;
+
+    let totalDownloads = 0;
+    players.forEach(player => totalDownloads += player.downloads);
+    document.getElementById("homeDownloadCount").innerText = totalDownloads;
+
+    if (homeTopPlayers) {
+      homeTopPlayers.innerHTML = "";
+
+      if (players.length === 0) {
+        homeTopPlayers.innerHTML = "<p>Noch keine Community-Mitglieder vorhanden.</p>";
+      }
+
+      players.slice(0, 10).forEach((player, index) => {
+        homeTopPlayers.innerHTML += `
+          <div class="card">
+            <h3>#${index + 1} ${player.mc_name}</h3>
+            <img class="community-avatar" src="https://mc-heads.net/avatar/${player.mc_name}">
+            <p>Downloads: ${player.downloads}</p>
+            <p>Bewertungen: ${player.review_count}</p>
+            <a href="player.html?id=${player.user_id}">Profil ansehen</a>
+          </div>
+        `;
+      });
+    }
+  }
+}
 
 async function loadPlugins() {
   updateNavbar();
@@ -346,8 +402,6 @@ async function downloadPlugin(pluginName) {
 
   alert(pluginName + " Download startet.");
 }
-
-/* PLUGIN DETAIL + REVIEWS */
 
 async function loadPluginDetail() {
   updateNavbar();
@@ -460,8 +514,6 @@ async function submitReview() {
   alert("Bewertung wurde gesendet und wartet auf Freigabe.");
   document.getElementById("reviewComment").value = "";
 }
-
-/* ADMIN */
 
 async function isCurrentUserAdmin() {
   const { data: userData } = await supabaseClient.auth.getUser();
@@ -630,58 +682,3 @@ async function deleteReview(reviewId) {
 }
 
 updateNavbar();
-async function loadHomePage() {
-  updateNavbar();
-
-  const homePlugins = document.getElementById("homePlugins");
-  const homeTopPlayers = document.getElementById("homeTopPlayers");
-
-  const { data: plugins } = await supabaseClient
-    .from("plugins")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (plugins) {
-    document.getElementById("homePluginCount").innerText = plugins.length;
-
-    homePlugins.innerHTML = "";
-
-    plugins.slice(0, 3).forEach(plugin => {
-      homePlugins.innerHTML += `
-        <div class="card">
-          <h3>${plugin.name}</h3>
-          <p>${plugin.short_description}</p>
-          <p>Version: ${plugin.version}</p>
-          <a href="plugin-detail.html?id=${plugin.id}">Weitere Infos</a>
-        </div>
-      `;
-    });
-  }
-
-  const { data: players } = await supabaseClient
-    .from("public_community")
-    .select("*")
-    .order("downloads", { ascending: false });
-
-  if (players) {
-    document.getElementById("homeUserCount").innerText = players.length;
-
-    let totalDownloads = 0;
-    players.forEach(player => totalDownloads += player.downloads);
-    document.getElementById("homeDownloadCount").innerText = totalDownloads;
-
-    homeTopPlayers.innerHTML = "";
-
-    players.slice(0, 10).forEach((player, index) => {
-      homeTopPlayers.innerHTML += `
-        <div class="card">
-          <h3>#${index + 1} ${player.mc_name}</h3>
-          <img class="community-avatar" src="https://mc-heads.net/avatar/${player.mc_name}">
-          <p>Downloads: ${player.downloads}</p>
-          <p>Bewertungen: ${player.review_count}</p>
-          <a href="player.html?id=${player.user_id}">Profil ansehen</a>
-        </div>
-      `;
-    });
-  }
-}
