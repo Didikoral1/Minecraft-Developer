@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Registrieren</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav>
+  <h2>Minecraft Developer</h2>
+  <div>
+    <a href="index.html">Start</a>
+    <a href="plugins.html">Plugins</a>
+    <a href="community.html">Community</a>
+
+    <a id="loginNav" href="login.html">Login</a>
+    <a id="registerNav" href="register.html">Registrieren</a>
+
+    <a id="profileNav" href="profile.html" style="display:none;">
+      <img id="navAvatar" class="nav-avatar" src="https://mc-heads.net/avatar/Steve">
+    </a>
+  </div>
+</nav>
+
+<section class="auth-box">
+  <h1>Registrieren</h1>
+
+  <input id="registerEmail" type="email" placeholder="E-Mail">
+  <input id="registerPassword" type="password" placeholder="Passwort">
+  <input id="registerMcName" type="text" placeholder="Minecraft Name">
+
+  <button onclick="register()">Account erstellen</button>
+
+  <p>Schon registriert?</p>
+  <a href="login.html">Zum Login</a>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="script.js"></script>
+</body>
+</html>
