@@ -1,1 +1,59 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body onload="loadAdminPanel()">
 
+<nav>
+  <h2>Minecraft Developer</h2>
+  <div>
+    <a href="index.html">Start</a>
+    <a href="plugins.html">Plugins</a>
+    <a href="community.html">Community</a>
+
+    <a id="loginNav" href="login.html">Login</a>
+    <a id="registerNav" href="register.html">Registrieren</a>
+
+    <a id="profileNav" href="profile.html" style="display:none;">
+      <img id="navAvatar" class="nav-avatar" src="https://mc-heads.net/avatar/Steve">
+    </a>
+  </div>
+</nav>
+
+<section class="content">
+  <h1>Admin Panel</h1>
+
+  <div id="adminAccess">
+    <p>Prüfe Adminrechte...</p>
+  </div>
+
+  <div id="adminPanel" style="display:none;">
+
+    <div class="auth-box">
+      <h2>Plugin hinzufügen</h2>
+
+      <input id="pluginName" placeholder="Plugin Name">
+      <input id="pluginVersion" placeholder="Minecraft Version">
+      <input id="pluginShort" placeholder="Kurze Beschreibung">
+      <textarea id="pluginFull" placeholder="Ausführliche Beschreibung"></textarea>
+      <input id="pluginDownload" placeholder="Download Link zur .jar Datei">
+
+      <button onclick="addPlugin()">Plugin speichern</button>
+    </div>
+
+    <h2>Offene Bewertungen</h2>
+    <div id="pendingReviews" class="cards"></div>
+
+    <h2>Plugins verwalten</h2>
+    <div id="adminPlugins" class="cards"></div>
+
+  </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="script.js"></script>
+</body>
+</html>
