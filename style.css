@@ -27,12 +27,27 @@ nav a {
   color: white;
   text-decoration: none;
   margin-left: 20px;
+  vertical-align: middle;
 }
 
 .discord {
   background: #5865F2;
   padding: 10px 16px;
   border-radius: 8px;
+}
+
+.nav-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  vertical-align: middle;
+  border: 2px solid #58ff7a;
+  transition: 0.2s;
+}
+
+.nav-avatar:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 12px rgba(88, 255, 122, 0.6);
 }
 
 .hero {
@@ -164,6 +179,11 @@ footer {
 
   nav div {
     margin-top: 15px;
+  }
+
+  nav a {
+    margin-left: 10px;
+    margin-right: 10px;
   }
 
   .hero h1 {
