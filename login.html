@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Login - Minecraft Developer</title>
+  <title>Login</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,34 +12,27 @@
   <div>
     <a href="index.html">Start</a>
     <a href="plugins.html">Plugins</a>
+    <a href="community.html">Community</a>
 
     <a id="loginNav" href="login.html">Login</a>
+    <a id="registerNav" href="register.html">Registrieren</a>
 
     <a id="profileNav" href="profile.html" style="display:none;">
-      <img id="navAvatar" class="nav-avatar" src="https://mc-heads.net/avatar/Steve" alt="Profil">
+      <img id="navAvatar" class="nav-avatar" src="https://mc-heads.net/avatar/Steve">
     </a>
-
-    <a class="discord" href="https://discord.gg/DEIN-LINK" target="_blank">Discord</a>
   </div>
 </nav>
 
 <section class="auth-box">
-  <h1>Registrieren</h1>
-
-  <input id="registerEmail" type="email" placeholder="E-Mail">
-  <input id="registerPassword" type="password" placeholder="Passwort">
-  <input id="registerMcName" type="text" placeholder="Minecraft Name">
-
-  <button onclick="register()">Account erstellen</button>
-
-  <hr>
-
   <h1>Login</h1>
 
   <input id="loginEmail" type="email" placeholder="E-Mail">
   <input id="loginPassword" type="password" placeholder="Passwort">
 
   <button onclick="login()">Einloggen</button>
+
+  <p>Noch kein Account?</p>
+  <a href="register.html">Jetzt registrieren</a>
 </section>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
