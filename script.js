@@ -65,7 +65,20 @@ async function register() {
     return;
   }
 
-  alert("Account erstellt. Prüfe eventuell deine E-Mail.");
+  alert("Account erstellt. Du wirst jetzt zum Profil weitergeleitet.");
+
+  await loginAfterRegister(email, password);
+}
+
+async function loginAfterRegister(email, password) {
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
+    email: email,
+    password: password
+  });
+
+  if (!error) {
+    window.location.href = "profile.html";
+  }
 }
 
 async function login() {
@@ -76,6 +89,11 @@ async function login() {
 
   const email = document.getElementById("loginEmail").value;
   const password = document.getElementById("loginPassword").value;
+
+  if (!email || !password) {
+    alert("Bitte E-Mail und Passwort eingeben.");
+    return;
+  }
 
   const { data, error } = await supabaseClient.auth.signInWithPassword({
     email: email,
@@ -100,6 +118,7 @@ async function loadProfile() {
 
   if (!data.user) {
     document.getElementById("profileName").innerText = "Nicht eingeloggt";
+    document.getElementById("profileEmail").innerText = "Bitte logge dich zuerst ein.";
     return;
   }
 
@@ -120,4 +139,32 @@ async function logout() {
   window.location.href = "index.html";
 }
 
+async function updateNavbar() {
+  if (!supabaseClient) {
+    return;
+  }
+
+  const loginNav = document.getElementById("loginNav");
+  const profileNav = document.getElementById("profileNav");
+  const navAvatar = document.getElementById("navAvatar");
+
+  if (!loginNav || !profileNav || !navAvatar) {
+    return;
+  }
+
+  const { data } = await supabaseClient.auth.getUser();
+
+  if (data.user) {
+    const mcName = data.user.user_metadata.mc_name || "Steve";
+
+    loginNav.style.display = "none";
+    profileNav.style.display = "inline-block";
+    navAvatar.src = "https://mc-heads.net/avatar/" + mcName;
+  } else {
+    loginNav.style.display = "inline-block";
+    profileNav.style.display = "none";
+  }
+}
+
 updateDownloadCounter();
+updateNavbar();
