@@ -1,5 +1,5 @@
-const SUPABASE_URL = "DEINE_SUPABASE_URL";
-const SUPABASE_KEY = "DEIN_PUBLISHABLE_KEY";
+const SUPABASE_URL = "https://fvoqwqarrlewwonzsydh.supabase.co";
+const SUPABASE_KEY = "sb_publishable_78UTQOor9uK3v_sDHF0YgA_Xgli01AM";
 
 let supabaseClient = null;
 
