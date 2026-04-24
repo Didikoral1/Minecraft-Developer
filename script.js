@@ -168,3 +168,41 @@ async function updateNavbar() {
 
 updateDownloadCounter();
 updateNavbar();
+async function loadCommunity() {
+  updateNavbar();
+
+  const communityList = document.getElementById("communityList");
+  if (!communityList) return;
+
+  const { data, error } = await supabaseClient
+    .from("public_community")
+    .select("*")
+    .order("downloads", { ascending: false });
+
+  if (error) {
+    communityList.innerHTML = "<p>Community konnte nicht geladen werden.</p>";
+    return;
+  }
+
+  if (data.length === 0) {
+    communityList.innerHTML = "<p>Noch keine Spieler registriert.</p>";
+    return;
+  }
+
+  communityList.innerHTML = "";
+
+  data.forEach(player => {
+    const joinedDate = new Date(player.created_at).toLocaleDateString("de-DE");
+
+    communityList.innerHTML += `
+      <div class="card">
+        <img class="community-avatar" src="https://mc-heads.net/avatar/${player.mc_name}" alt="${player.mc_name}">
+        <h3>${player.mc_name}</h3>
+        <p>Downloads: ${player.downloads}</p>
+        <p>Bewertungen: ${player.review_count}</p>
+        <p>Durchschnitt: ${player.avg_stars} ⭐</p>
+        <p>Mitglied seit: ${joinedDate}</p>
+      </div>
+    `;
+  });
+}
