@@ -630,3 +630,58 @@ async function deleteReview(reviewId) {
 }
 
 updateNavbar();
+async function loadHomePage() {
+  updateNavbar();
+
+  const homePlugins = document.getElementById("homePlugins");
+  const homeTopPlayers = document.getElementById("homeTopPlayers");
+
+  const { data: plugins } = await supabaseClient
+    .from("plugins")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (plugins) {
+    document.getElementById("homePluginCount").innerText = plugins.length;
+
+    homePlugins.innerHTML = "";
+
+    plugins.slice(0, 3).forEach(plugin => {
+      homePlugins.innerHTML += `
+        <div class="card">
+          <h3>${plugin.name}</h3>
+          <p>${plugin.short_description}</p>
+          <p>Version: ${plugin.version}</p>
+          <a href="plugin-detail.html?id=${plugin.id}">Weitere Infos</a>
+        </div>
+      `;
+    });
+  }
+
+  const { data: players } = await supabaseClient
+    .from("public_community")
+    .select("*")
+    .order("downloads", { ascending: false });
+
+  if (players) {
+    document.getElementById("homeUserCount").innerText = players.length;
+
+    let totalDownloads = 0;
+    players.forEach(player => totalDownloads += player.downloads);
+    document.getElementById("homeDownloadCount").innerText = totalDownloads;
+
+    homeTopPlayers.innerHTML = "";
+
+    players.slice(0, 10).forEach((player, index) => {
+      homeTopPlayers.innerHTML += `
+        <div class="card">
+          <h3>#${index + 1} ${player.mc_name}</h3>
+          <img class="community-avatar" src="https://mc-heads.net/avatar/${player.mc_name}">
+          <p>Downloads: ${player.downloads}</p>
+          <p>Bewertungen: ${player.review_count}</p>
+          <a href="player.html?id=${player.user_id}">Profil ansehen</a>
+        </div>
+      `;
+    });
+  }
+}
