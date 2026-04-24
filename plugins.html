@@ -2,55 +2,32 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Plugins - Minecraft Developer</title>
+  <title>Plugins</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body onload="loadPlugins()">
 
 <nav>
   <h2>Minecraft Developer</h2>
   <div>
     <a href="index.html">Start</a>
     <a href="plugins.html">Plugins</a>
+    <a href="community.html">Community</a>
 
     <a id="loginNav" href="login.html">Login</a>
+    <a id="registerNav" href="register.html">Registrieren</a>
 
     <a id="profileNav" href="profile.html" style="display:none;">
-      <img id="navAvatar" class="nav-avatar" src="https://mc-heads.net/avatar/Steve" alt="Profil">
+      <img id="navAvatar" class="nav-avatar" src="https://mc-heads.net/avatar/Steve">
     </a>
-
-    <a class="discord" href="https://discord.gg/DEIN-LINK" target="_blank">Discord</a>
   </div>
 </nav>
 
 <section class="content">
   <h1>Plugin Downloads</h1>
-  <p>Hier findest du meine kostenlosen Minecraft Plugins.</p>
+  <p>Alle Plugins werden über das Admin Panel verwaltet.</p>
 
-  <div class="cards">
-
-    <div class="card">
-      <h3>Auktionshaus</h3>
-      <p>GUI-basiertes Auktionssystem für Minecraft Server.</p>
-      <span>Version: 1.20.4</span>
-      <button onclick="downloadPlugin('Auktionshaus')">Download</button>
-    </div>
-
-    <div class="card">
-      <h3>Rucksack</h3>
-      <p>Persönliche Rucksäcke mit Speicherung.</p>
-      <span>Version: 1.21.8</span>
-      <button onclick="downloadPlugin('Rucksack')">Download</button>
-    </div>
-
-    <div class="card">
-      <h3>Wartung</h3>
-      <p>Wartungsmodus mit Permission-System.</p>
-      <span>Version: 1.20.4</span>
-      <button onclick="downloadPlugin('Wartung')">Download</button>
-    </div>
-
-  </div>
+  <div id="pluginList" class="cards"></div>
 </section>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
