@@ -1,1 +1,53 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Plugin Details</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body onload="loadPluginDetail()">
 
+<nav>
+  <h2>Minecraft Developer</h2>
+  <div>
+    <a href="index.html">Start</a>
+    <a href="plugins.html">Plugins</a>
+    <a href="community.html">Community</a>
+
+    <a id="loginNav" href="login.html">Login</a>
+    <a id="registerNav" href="register.html">Registrieren</a>
+
+    <a id="profileNav" href="profile.html" style="display:none;">
+      <img id="navAvatar" class="nav-avatar" src="https://mc-heads.net/avatar/Steve">
+    </a>
+  </div>
+</nav>
+
+<section class="content">
+  <div id="pluginDetail"></div>
+
+  <div class="auth-box">
+    <h2>Bewertung schreiben</h2>
+
+    <select id="reviewStars">
+      <option value="5">5 Sterne</option>
+      <option value="4">4 Sterne</option>
+      <option value="3">3 Sterne</option>
+      <option value="2">2 Sterne</option>
+      <option value="1">1 Stern</option>
+    </select>
+
+    <textarea id="reviewComment" placeholder="Dein Kommentar"></textarea>
+
+    <button onclick="submitReview()">Bewertung absenden</button>
+    <p>Bewertungen werden erst nach Admin-Freigabe sichtbar.</p>
+  </div>
+
+  <h2>Bewertungen</h2>
+  <div id="reviewList" class="cards"></div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="script.js"></script>
+</body>
+</html>
