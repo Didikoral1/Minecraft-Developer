@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Login - Minecraft Developer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav>
+  <h2>Minecraft Developer</h2>
+  <div>
+    <a href="index.html">Start</a>
+    <a href="plugins.html">Plugins</a>
+    <a href="login.html">Login</a>
+    <a href="profile.html">Profil</a>
+  </div>
+</nav>
+
+<section class="auth-box">
+  <h1>Registrieren</h1>
+
+  <input id="registerEmail" type="email" placeholder="E-Mail">
+  <input id="registerPassword" type="password" placeholder="Passwort">
+  <input id="registerMcName" type="text" placeholder="Minecraft Name">
+
+  <button onclick="register()">Account erstellen</button>
+
+  <hr>
+
+  <h1>Login</h1>
+
+  <input id="loginEmail" type="email" placeholder="E-Mail">
+  <input id="loginPassword" type="password" placeholder="Passwort">
+
+  <button onclick="login()">Einloggen</button>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="script.js"></script>
+</body>
+</html>
