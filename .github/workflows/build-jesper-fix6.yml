@@ -23,11 +23,33 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p jesper-build/project
-          : > jesper-build/Jesper-FIX6-Source.zip
-          while IFS= read -r part; do
-            base64 -d "$part" >> jesper-build/Jesper-FIX6-Source.zip
-          done < <(find jesper-build/chunks2 -maxdepth 1 -type f -name 'part*.txt' | LC_ALL=C sort)
-          echo '9a33e159ab03d598c31762b08c7d118603b9fcf226b14c9c56e81bc8ada6015c  jesper-build/Jesper-FIX6-Source.zip' | sha256sum -c -
+          python3 - <<'PY'
+          import base64
+          import hashlib
+          from pathlib import Path
+
+          chunks = sorted(Path('jesper-build/chunks2').glob('part*.txt'))
+          if not chunks:
+              raise SystemExit('No source chunks found')
+
+          output = bytearray()
+          for chunk in chunks:
+              encoded = ''.join(chunk.read_text(encoding='ascii').split())
+              try:
+                  decoded = base64.b64decode(encoded, validate=True)
+              except Exception as exc:
+                  raise SystemExit(f'Invalid base64 in {chunk}: length={len(encoded)}: {exc}')
+              print(f'{chunk}: {len(decoded)} bytes')
+              output.extend(decoded)
+
+          archive = Path('jesper-build/Jesper-FIX6-Source.zip')
+          archive.write_bytes(output)
+          digest = hashlib.sha256(output).hexdigest()
+          print(f'SHA-256: {digest}')
+          expected = '9a33e159ab03d598c31762b08c7d118603b9fcf226b14c9c56e81bc8ada6015c'
+          if digest != expected:
+              raise SystemExit(f'Archive checksum mismatch: expected {expected}, got {digest}')
+          PY
           unzip -q jesper-build/Jesper-FIX6-Source.zip -d jesper-build/project
           test -f jesper-build/project/Jesper/pom.xml
 
