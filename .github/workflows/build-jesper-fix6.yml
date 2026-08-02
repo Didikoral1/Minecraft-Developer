@@ -23,7 +23,11 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p jesper-build/project
-          cat jesper-build/chunks/part*.txt | base64 -d > jesper-build/Jesper-FIX6-Source.zip
+          : > jesper-build/Jesper-FIX6-Source.zip
+          while IFS= read -r part; do
+            base64 -d "$part" >> jesper-build/Jesper-FIX6-Source.zip
+          done < <(find jesper-build/chunks2 -maxdepth 1 -type f -name 'part*.txt' | LC_ALL=C sort)
+          echo '9a33e159ab03d598c31762b08c7d118603b9fcf226b14c9c56e81bc8ada6015c  jesper-build/Jesper-FIX6-Source.zip' | sha256sum -c -
           unzip -q jesper-build/Jesper-FIX6-Source.zip -d jesper-build/project
           test -f jesper-build/project/Jesper/pom.xml
 
