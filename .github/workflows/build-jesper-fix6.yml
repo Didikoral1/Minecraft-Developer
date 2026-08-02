@@ -125,7 +125,7 @@ jobs:
 
           [ "$started" -eq 1 ]
           grep -Fq 'Enabling Jesper v1.21.11-FIX6' console.log
-          grep -Fq 'Jesper wurde erfolgreich geladen. Version: 1.21.11-FIX6' console.log
+          grep -Fq 'Jesper Premium wurde erfolgreich geladen. Version: 1.21.11-FIX6' console.log
 
           if grep -E 'Error occurred while enabling Jesper|Could not load.*Jesper|IncompatibleClassChangeError|NoSuchMethodError' console.log; then
             exit 1
