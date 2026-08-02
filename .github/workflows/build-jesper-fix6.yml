@@ -79,6 +79,54 @@ jobs:
           jar xf "../../$JAR" plugin.yml
           grep -q "version: '1.21.11-FIX6'" plugin.yml
 
+      - name: Smoke test on Paper 1.21.11 build 132
+        shell: bash
+        run: |
+          set -euo pipefail
+          TEST_DIR="$GITHUB_WORKSPACE/jesper-build/smoke"
+          mkdir -p "$TEST_DIR/plugins"
+          cp "$GITHUB_WORKSPACE/jesper-build/project/Jesper/target/Jesper.jar" "$TEST_DIR/plugins/Jesper.jar"
+          cd "$TEST_DIR"
+
+          BUILD_JSON=$(curl -fsSL "https://api.papermc.io/v2/projects/paper/versions/1.21.11/builds/132")
+          DOWNLOAD_NAME=$(python3 -c 'import json,sys; print(json.load(sys.stdin)["downloads"]["application"]["name"])' <<< "$BUILD_JSON")
+          curl -fsSL -o paper.jar "https://api.papermc.io/v2/projects/paper/versions/1.21.11/builds/132/downloads/$DOWNLOAD_NAME"
+
+          printf 'eula=true\n' > eula.txt
+          java -Xms512M -Xmx1G -jar paper.jar --nogui > console.log 2>&1 &
+          SERVER_PID=$!
+
+          started=0
+          for _ in $(seq 1 90); do
+            if ! kill -0 "$SERVER_PID" 2>/dev/null; then
+              cat console.log
+              exit 1
+            fi
+            if grep -q 'Done (' console.log; then
+              started=1
+              break
+            fi
+            sleep 2
+          done
+
+          if [ "$started" -ne 1 ]; then
+            cat console.log
+            kill "$SERVER_PID" 2>/dev/null || true
+            exit 1
+          fi
+
+          grep -Fq '[Jesper] Enabling Jesper v1.21.11-FIX6' console.log
+          grep -Fq 'Jesper wurde erfolgreich geladen. Version: 1.21.11-FIX6' console.log
+
+          if grep -E 'Error occurred while enabling Jesper|Could not load.*Jesper|IncompatibleClassChangeError|NoSuchMethodError' console.log; then
+            cat console.log
+            kill "$SERVER_PID" 2>/dev/null || true
+            exit 1
+          fi
+
+          kill "$SERVER_PID" 2>/dev/null || true
+          wait "$SERVER_PID" 2>/dev/null || true
+
       - name: Upload Jesper.jar
         uses: actions/upload-artifact@v4
         with:
