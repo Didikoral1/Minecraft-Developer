@@ -84,13 +84,14 @@ jobs:
         run: |
           set -euo pipefail
           TEST_DIR="$GITHUB_WORKSPACE/jesper-build/smoke"
+          USER_AGENT='JesperPluginBuild/1.21.11-FIX6 (didikoral554@gmail.com)'
           mkdir -p "$TEST_DIR/plugins"
           cp "$GITHUB_WORKSPACE/jesper-build/project/Jesper/target/Jesper.jar" "$TEST_DIR/plugins/Jesper.jar"
           cd "$TEST_DIR"
 
-          BUILD_JSON=$(curl -fsSL "https://api.papermc.io/v2/projects/paper/versions/1.21.11/builds/132")
-          DOWNLOAD_NAME=$(python3 -c 'import json,sys; print(json.load(sys.stdin)["downloads"]["application"]["name"])' <<< "$BUILD_JSON")
-          curl -fsSL -o paper.jar "https://api.papermc.io/v2/projects/paper/versions/1.21.11/builds/132/downloads/$DOWNLOAD_NAME"
+          BUILDS_JSON=$(curl -fsSL -H "User-Agent: $USER_AGENT" "https://fill.papermc.io/v3/projects/paper/versions/1.21.11/builds")
+          DOWNLOAD_URL=$(python3 -c 'import json,sys; builds=json.load(sys.stdin); print(next(item["downloads"]["server:default"]["url"] for item in builds if item["number"] == 132))' <<< "$BUILDS_JSON")
+          curl -fsSL -H "User-Agent: $USER_AGENT" -o paper.jar "$DOWNLOAD_URL"
 
           printf 'eula=true\n' > eula.txt
           java -Xms512M -Xmx1G -jar paper.jar --nogui > console.log 2>&1 &
