@@ -90,7 +90,7 @@ jobs:
           cd "$TEST_DIR"
 
           BUILDS_JSON=$(curl -fsSL -H "User-Agent: $USER_AGENT" "https://fill.papermc.io/v3/projects/paper/versions/1.21.11/builds")
-          DOWNLOAD_URL=$(python3 -c 'import json,sys; builds=json.load(sys.stdin); print(next(item["downloads"]["server:default"]["url"] for item in builds if item["number"] == 132))' <<< "$BUILDS_JSON")
+          DOWNLOAD_URL=$(python3 -c 'import json,sys; builds=json.load(sys.stdin); print(next(item["downloads"]["server:default"]["url"] for item in builds if item["downloads"]["server:default"]["name"].endswith("-132.jar")))' <<< "$BUILDS_JSON")
           curl -fsSL -H "User-Agent: $USER_AGENT" -o paper.jar "$DOWNLOAD_URL"
 
           printf 'eula=true\n' > eula.txt
