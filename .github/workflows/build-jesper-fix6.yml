@@ -1,0 +1,65 @@
+name: Build Jesper FIX6
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out sources
+        uses: actions/checkout@v4
+
+      - name: Restore Jesper source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p jesper-build/project
+          cat jesper-build/chunks/part*.txt | base64 -d > jesper-build/Jesper-FIX6-Source.zip
+          unzip -q jesper-build/Jesper-FIX6-Source.zip -d jesper-build/project
+          test -f jesper-build/project/Jesper/pom.xml
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: jesper-build/project/Jesper/pom.xml
+
+      - name: Build against official Paper 1.21.11 API
+        working-directory: jesper-build/project/Jesper
+        run: mvn -B -U clean package
+
+      - name: Verify plugin jar
+        shell: bash
+        run: |
+          set -euo pipefail
+          JAR=jesper-build/project/Jesper/target/Jesper.jar
+          test -s "$JAR"
+          jar tf "$JAR" | grep -q '^plugin.yml$'
+          jar tf "$JAR" | grep -q '^org/example1/jesper/Jesper.class$'
+          if jar tf "$JAR" | grep -q '^org/bukkit/'; then
+            echo 'Bukkit/Paper API classes must not be shaded into the plugin jar.' >&2
+            exit 1
+          fi
+          mkdir -p jesper-build/verify
+          cd jesper-build/verify
+          jar xf "../../$JAR" plugin.yml
+          grep -q "version: '1.21.11-FIX6'" plugin.yml
+
+      - name: Upload Jesper.jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: Jesper-FIX6
+          path: jesper-build/project/Jesper/target/Jesper.jar
+          if-no-files-found: error
+          retention-days: 1
