@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>NicoPanel – Betreuungsmanagement</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">N</div>
+        <div><strong>NicoPanel</strong><span>Betreuungsmanagement</span></div>
+      </div>
+      <nav id="nav">
+        <button class="nav-item active" data-view="dashboard">◫ <span>Übersicht</span></button>
+        <button class="nav-item" data-view="calendar">▦ <span>Kalender</span><b id="navDeadlineBadge">0</b></button>
+        <button class="nav-item" data-view="mail">✉ <span>E-Mails</span><b id="navMailBadge">0</b></button>
+        <button class="nav-item" data-view="people">♙ <span>Personenakten</span></button>
+      </nav>
+      <div class="sidebar-foot">
+        <div class="privacy-pill">● Lokale Beta-Daten</div>
+        <small>NicoPanel Beta 0.1</small>
+      </div>
+    </aside>
+
+    <main>
+      <header class="topbar">
+        <div>
+          <p class="eyebrow" id="viewEyebrow">ARBEITSBEREICH</p>
+          <h1 id="viewTitle">Guten Tag</h1>
+        </div>
+        <div class="top-actions">
+          <label class="search"><span>⌕</span><input id="globalSearch" placeholder="Person, Akte, Mail durchsuchen …" /></label>
+          <button class="icon-btn" id="resetDemo" title="Demodaten zurücksetzen">↻</button>
+          <div class="avatar">NB</div>
+        </div>
+      </header>
+
+      <section class="view active" id="dashboard-view">
+        <div class="hero">
+          <div><span class="hero-kicker">HEUTE IM BLICK</span><h2>Alles Wichtige an einem Ort.</h2><p>Fristen, neue Nachrichten und laufende Fälle – priorisiert für deinen Arbeitstag.</p></div>
+          <div class="hero-date" id="heroDate"></div>
+        </div>
+        <div class="stats-grid">
+          <article class="stat-card"><span>Offene Fristen</span><strong id="statDeadlines">0</strong><small id="statDeadlinesHint">–</small></article>
+          <article class="stat-card"><span>Neue E-Mails</span><strong id="statMails">0</strong><small>noch nicht zugeordnet</small></article>
+          <article class="stat-card"><span>Aktive Akten</span><strong id="statPeople">0</strong><small>Personen in Betreuung</small></article>
+          <article class="stat-card"><span>Notizen</span><strong id="statNotes">0</strong><small>in allen Akten</small></article>
+        </div>
+        <div class="two-col">
+          <section class="panel"><div class="panel-head"><div><span class="section-kicker">PRIORITÄTEN</span><h3>Nächste Fristen</h3></div><button class="text-btn" data-jump="calendar">Kalender öffnen →</button></div><div id="dashboardDeadlines" class="deadline-list"></div></section>
+          <section class="panel"><div class="panel-head"><div><span class="section-kicker">POSTEINGANG</span><h3>Neue Nachrichten</h3></div><button class="text-btn" data-jump="mail">Alle E-Mails →</button></div><div id="dashboardMails" class="mail-mini-list"></div></section>
+        </div>
+      </section>
+
+      <section class="view" id="calendar-view">
+        <div class="page-tools">
+          <div><span class="section-kicker">FRISTEN & TERMINE</span><h2>Kalender</h2></div>
+          <div class="legend"><span><i class="dot deadline"></i>Frist</span><span><i class="dot appointment"></i>Termin</span><span><i class="dot followup"></i>Wiedervorlage</span></div>
+        </div>
+        <div class="calendar-layout">
+          <section class="panel calendar-panel"><div class="calendar-head"><button id="prevMonth">‹</button><h3 id="monthLabel"></h3><button id="nextMonth">›</button></div><div class="weekdays"><span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span></div><div id="calendarGrid" class="calendar-grid"></div></section>
+          <aside class="panel agenda"><div class="panel-head"><div><span class="section-kicker">AGENDA</span><h3>Anstehend</h3></div></div><div id="agendaList"></div></aside>
+        </div>
+      </section>
+
+      <section class="view" id="mail-view">
+        <div class="page-tools"><div><span class="section-kicker">KOMMUNIKATION</span><h2>E-Mail Posteingang</h2></div><div class="filter-tabs"><button class="active" data-mail-filter="all">Alle</button><button data-mail-filter="unassigned">Nicht zugeordnet</button><button data-mail-filter="deadline">Mit Frist</button></div></div>
+        <div class="mail-layout"><section class="panel mail-list-panel"><div id="mailList" class="mail-list"></div></section><section class="panel mail-reader" id="mailReader"><div class="empty-state"><div>✉</div><h3>Nachricht auswählen</h3><p>Öffne links eine E-Mail, um Details, erkannte Fristen und Zuordnung zu sehen.</p></div></section></div>
+      </section>
+
+      <section class="view" id="people-view">
+        <div class="page-tools"><div><span class="section-kicker">FALLMANAGEMENT</span><h2>Personenakten</h2></div><button class="primary-btn" id="addPersonBtn">＋ Neue Akte</button></div>
+        <div class="people-toolbar"><label class="search wide"><span>⌕</span><input id="peopleSearch" placeholder="Personenakten durchsuchen …" /></label><span id="peopleCount"></span></div>
+        <div id="peopleList" class="people-list"></div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="personDialog">
+    <form method="dialog" id="personForm">
+      <div class="dialog-head"><div><span class="section-kicker">NEUER FALL</span><h3>Personenakte anlegen</h3></div><button value="cancel" class="icon-btn">×</button></div>
+      <label>Name<input name="name" required placeholder="Vor- und Nachname" /></label>
+      <label>Aktenzeichen<input name="caseNumber" required placeholder="z. B. NP-2026-104" /></label>
+      <label>Kategorie<select name="category"><option>Rechtliche Betreuung</option><option>Sozialbetreuung</option><option>Behördenangelegenheit</option><option>Finanzen</option></select></label>
+      <label>Hinweis<textarea name="note" rows="3" placeholder="Optionaler Erstvermerk …"></textarea></label>
+      <div class="dialog-actions"><button value="cancel" class="secondary-btn">Abbrechen</button><button value="default" class="primary-btn" id="savePerson">Akte anlegen</button></div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast"></div>
+  <script src="./app.js"></script>
+</body>
+</html>
